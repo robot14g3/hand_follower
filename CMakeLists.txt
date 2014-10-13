@@ -5,7 +5,11 @@ project(hand_follower)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
+    sensor_msgs
+    cv_bridge
+    roscpp
+    std_msgs
+    image_transport
 )
 
 ## System dependencies are found with CMake's conventions
@@ -161,4 +165,4 @@ include_directories(
 # catkin_add_nosetests(test)
 
 add_executable(hand_tracker src/hand_tracker.cpp)
-add_dependencies(hand_tracker ${catkin_LIBRARIES})
+target_link_libraries(hand_tracker ${catkin_LIBRARIES})
