@@ -159,3 +159,6 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(hand_tracker src/hand_tracker.cpp)
+add_dependencies(hand_tracker ${catkin_LIBRARIES})
