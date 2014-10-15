@@ -1,60 +1,39 @@
 #include <ros/ros.h>
-#include <sensor_msgs/Image.h>
-#include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/image_encodings.h>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/filters/crop_box.h>
 
-class HandTracker {
-    ros::NodeHandle _nh;
-    image_transport::ImageTransport _it;
-    image_transport::Subscriber _depth_sub;
-    image_transport::Publisher _depth_pub;
+static ros::Publisher pcl_pub;
 
-public:
-    HandTracker() :
-    _it(_nh)
-    {
-        _depth_sub = _it.subscribe("/camera/depth/image_raw", 1, &HandTracker::imageCb, this);
-        _depth_pub = _it.advertise("/hand_follower/hand_tracker_filtered", 1);
-    }
+void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr input(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr output(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PCLPointCloud2 tmp_pcl;
+    pcl_conversions::toPCL(*pcl_msg, tmp_pcl);
+    pcl::fromPCLPointCloud2(tmp_pcl, *input);
 
-    void imageCb(const sensor_msgs::ImageConstPtr& img)
-    {
-        ROS_INFO_ONCE("encoding: %s", img->encoding.c_str());
+    pcl::PassThrough<pcl::PointXYZRGB> pass;
+    pass.setInputCloud(input);
+    pass.setFilterFieldName ("z");
+    pass.setFilterLimits (0.0, 1.0);
+    pass.filter(*output);
 
-        cv_bridge::CvImagePtr cv_ptr;
-        try
-        {
-            cv_ptr = cv_bridge::toCvCopy(img, "32FC1");
-        }
-        catch (cv_bridge::Exception& e)
-        {
-            ROS_ERROR("cv_bridge exception: %s", e.what());
-            return;
-        }
-        cv::Mat resMat;
-        try {
-            cv::threshold(cv_ptr->image, resMat, 1000, 1, cv::THRESH_BINARY_INV);
-        } catch (cv::Exception& e) {
-            ROS_ERROR("cv_threshold error: %s", e.what());
-        }
+    ROS_INFO("input size:%d output size:%d", input->size(), output->size());
 
-        cv_bridge::CvImage res;
-        res.header = img->header;
-        res.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
-        res.image = resMat;
-
-        _depth_pub.publish(res.toImageMsg());
-
-    }
-};
+    sensor_msgs::PointCloud2 msg_out;
+    pcl::toROSMsg(*output, msg_out);
+    pcl_pub.publish(msg_out);
+}
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "hand_tracker");
-  HandTracker ht;
-  ros::spin();
-  return 0;
+    ros::init(argc, argv, "hand_tracker");
+    ros::NodeHandle nh;
+    ros::Subscriber pcl_sub = nh.subscribe("/camera/depth_registered/points", 1, imageCb);
+    pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/hand_tracker/pcl_filtered", 1);
+    ros::spin();
+    return 0;
 }

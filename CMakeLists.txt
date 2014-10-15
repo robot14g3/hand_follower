@@ -6,10 +6,9 @@ project(hand_follower)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
-    cv_bridge
     roscpp
     std_msgs
-    image_transport
+    pcl_ros
 )
 
 ## System dependencies are found with CMake's conventions
