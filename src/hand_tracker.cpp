@@ -33,9 +33,11 @@ void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
     //Order of params: width, height, depth
     Eigen::Vector4f minVal(-BOXSIZE, -BOXSIZE, 0, 1);
     Eigen::Vector4f maxVal(BOXSIZE, BOXSIZE, 2*BOXSIZE, 1);
+    minVal += offset;
+    maxVal += offset;
     pcl::CropBox<Point> cb;
-    cb.setMin(minVal+offset);
-    cb.setMax(maxVal+offset);
+    cb.setMin(minVal);
+    cb.setMax(maxVal);
     cb.setInputCloud(input);
     cb.filter(*output);
 
@@ -85,6 +87,43 @@ void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
     vis_msg_out.scale.x =  0.04;
     vis_msg_out.scale.y =  0.08;
     vis_pub.publish(vis_msg_out);
+
+    visualization_msgs::Marker vis_msg_out2;
+    vis_msg_out2.header.frame_id = "/camera_depth_frame";
+    vis_msg_out2.header.stamp = ros::Time();
+    vis_msg_out2.ns = "box_marker";
+    vis_msg_out2.id = 0;
+    vis_msg_out2.action = visualization_msgs::Marker::ADD;
+    vis_msg_out2.type = visualization_msgs::Marker::LINE_STRIP;
+    geometry_msgs::Point p;
+    p.x = minVal[2]; p.y = -minVal[1]; p.z = -minVal[0];
+    vis_msg_out2.points.push_back(p);
+    p.x = minVal[2]; p.y = -minVal[1]; p.z = -maxVal[0];
+    vis_msg_out2.points.push_back(p);
+    vis_msg_out2.points.push_back(p);
+    p.x = minVal[2]; p.y = -maxVal[1]; p.z = -maxVal[0];
+    vis_msg_out2.points.push_back(p);
+    vis_msg_out2.points.push_back(p);
+    p.x = minVal[2]; p.y = -maxVal[1]; p.z = -minVal[0];
+    vis_msg_out2.points.push_back(p);
+    vis_msg_out2.points.push_back(p);
+    p.x = maxVal[2]; p.y = -maxVal[1]; p.z = -minVal[0];
+    vis_msg_out2.points.push_back(p);
+    vis_msg_out2.points.push_back(p);
+    p.x = maxVal[2]; p.y = -maxVal[1]; p.z = -maxVal[0];
+    vis_msg_out2.points.push_back(p);
+    vis_msg_out2.points.push_back(p);
+    p.x = maxVal[2]; p.y = -minVal[1]; p.z = -maxVal[0];
+    vis_msg_out2.points.push_back(p);
+    vis_msg_out2.points.push_back(p);
+    p.x = maxVal[2]; p.y = -minVal[1]; p.z = -minVal[0];
+    vis_msg_out2.points.push_back(p);
+
+
+    vis_msg_out2.lifetime = ros::Duration(3, 0);
+    vis_msg_out2.color = c;
+    vis_msg_out2.scale.x =  0.04;
+    vis_pub.publish(vis_msg_out2);
 }
 
 int main(int argc, char** argv)
