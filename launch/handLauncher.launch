@@ -1,9 +1,9 @@
 <launch>
 <!-- rosrun rosserial_python serial_node.py _port:=/dev/ttyACM0 -->
 <!-- Run Python serial communication -->
-<node pkg="rosserial_python" type="serial_node" name="serial_node" output="screen" >
+<node pkg="rosserial_python" type="serial_node.py" name="serial_node" output="screen" >
 <!-- chose port -->
-<param name="port" value="=/dev/ttyACM0"/>
+<param name="~port" value="/dev/ttyACM0"/>
 </node>
 <!--<include file="$(find openni2_launch)/openni2.launch"  >
 	<param name="depth_registration" value="true" />
@@ -30,7 +30,7 @@
 </node>
 <node pkg="hand_follower" type="hand_controller" name="hand_controller" output="screen">
 	<param name="speedParameter" value="1" />
-	<param name="angularParameter" value="5" />
+	<param name="angularParameter" value="1" />
 	<param name="Ytarget" value="0" />
 	<param name="Xtarget" value="0.5" />
 </node>
