@@ -9,27 +9,38 @@ class hand_controller{
     geometry_msgs::Twist msg;
 	ros::Subscriber Hand_subscriber;
 
-	hand_controller(){
+	hand_controller(double x, double y){
 		n = ros::NodeHandle("~");
-	}
-	// Z ist the Distance to the object, x is distance to the middle. 
-	void init(double x, double z){        
 		Hand_subscriber = n.subscribe("/hand_tracker/direction", 1, &hand_controller::directioncallbacker,this);
 		Twist_publisher= n.advertise<geometry_msgs::Twist>("/motor_controller/twist", 100);
 		error[0]=0;
 		error[1]=0;
 		aimed[0]=x;
-		aimed[1]=z;
+		aimed[1]=y;
 		current[0]=x;
-		current[0]=z;
+		current[0]=y;
 		speed=0;
 		angel=0;
-    }
+		speedparameter = 1;
+		angularparameter= 5;
+		if(n.hasParam("speedParamter")){
+			n.getParam("speedParameter",speedparameter);
+		}
+		if(n.hasParam("angularParamter")){
+			n.getParam("angularParameter",angularparameter);
+		}
+		if(n.hasParam("Xtarget")){
+			n.getParam("Xtarget",aimed[0]);
+		}
+		if(n.hasParam("Ytarget")){
+			n.getParam("Ytarget",aimed[1]);
+		}
+	}
     void call(){
 		error[0]= aimed[0] - current[0];
 		error[1]= aimed[1] - current[1];
-		speed=speed+speedparameter*error[1];
-		angel=angel+ angularparameter*error[0];
+		speed=speed+ speedparameter*error[0];
+		angel=angel+ angularparameter*error[1];
 		msg.linear.x=speed;
     	msg.linear.y=0;
     	msg.linear.z=0;
@@ -41,15 +52,15 @@ class hand_controller{
 	void directioncallbacker(geometry_msgs::Point msgP){
 		current[0]=msgP.x;
 		current[1]=msgP.z;
-		if(current[0]==0 && current[1]==0){
+		if(abs(current[0])<0.000001 && abs(current[1])<0.000001){
 				current[0]=aimed[0];
 				current[0]=aimed[0];
 		}
 		
 	}
 	private:
-	static const float speedparameter = 50;
-	static const float angularparameter= 50;
+	double speedparameter;
+	double angularparameter;
 	double current [2];
 	double error [2]; 
 	double aimed [2];
@@ -58,9 +69,9 @@ class hand_controller{
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "hand_controller");
-
-    hand_controller hand_controller_node;
-   	hand_controller_node.init(0,0.5);
+	double xvalue=0.6;
+	double yvalue=0;
+    hand_controller hand_controller_node(xvalue,yvalue);
     ros::Rate loop_rate(10.0);
 
     while(hand_controller_node.n.ok())
