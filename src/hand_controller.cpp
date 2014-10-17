@@ -23,17 +23,17 @@ class hand_controller{
 		angel=0;
 		speedparameter = 1;
 		angularparameter= 5;
-        if(n.hasParam("SpeedParamter")){
-            n.getParam("SpeedParameter",speedparameter);
+        if(n.hasParam("hand_controller/SpeedParamter")){
+            n.getParam("hand_controller/SpeedParameter",speedparameter);
 		}
-		if(n.hasParam("angularParamter")){
-            n.getParam("angularParameter",angularparameter);
+        if(n.hasParam("hand_controller/angularParamter")){
+            n.getParam("hand_controller/angularParameter",angularparameter);
 		}
-		if(n.hasParam("Xtarget")){
-			n.getParam("Xtarget",aimed[0]);
+        if(n.hasParam("hand_controller/Xtarget")){
+            n.getParam("hand_controller/Xtarget",aimed[0]);
 		}
-		if(n.hasParam("Ytarget")){
-			n.getParam("Ytarget",aimed[1]);
+        if(n.hasParam("hand_controller/Ytarget")){
+            n.getParam("hand_controller/Ytarget",aimed[1]);
 		}
         ROS_INFO_ONCE("Parameters are speed: %f angular:  %f Xtarget: %f  Ytarget %f", speedparameter, angularparameter, aimed[0], aimed[1]);
 	}

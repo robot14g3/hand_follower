@@ -1,0 +1,10 @@
+hand_tracker:
+    boxSize: 0.4
+    heightOffset: 0.3
+    depthOffset: 0.3
+
+hand_controller:
+    SpeedParameter: 3.0
+    angularParameter: 3.0
+    Xtarget: 0.6
+    Ytarget: 0.0

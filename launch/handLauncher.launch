@@ -1,15 +1,7 @@
 <launch>
-    <node pkg="hand_follower" type="hand_tracker" name="hand_tracker" output="screen" >
-        <param name="boxSize" value="0.5" />
-        <param name="heightOffset" value="0.6" />
-        <param name="depthOffset" value="0.3" />
-    </node>
-    <node pkg="hand_follower" type="hand_controller" name="hand_controller" output="screen">
-        <param name="SpeedParameter"   value="1.0" />
-        <param name="angularParameter" value="1.0" />
-        <param name="Xtarget"          value="0.5" />
-        <param name="Ytarget"          value="0.0" />
-    </node>
+    <rosparam command="load" file="$(find hand_follower)/launch/settings.yaml" />
+    <node pkg="hand_follower" type="hand_tracker" name="hand_tracker" output="screen" />
+    <node pkg="hand_follower" type="hand_controller" name="hand_controller" output="screen" />
 </launch>
 
 

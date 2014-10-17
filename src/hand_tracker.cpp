@@ -77,12 +77,9 @@ static void init() {
     //Order of params: width, height, depth
     nh = (new ros::NodeHandle);
     double boxSize = 0.3, heightOffset = 0.3, depthOffset = 0.1;
-    if(nh->hasParam("boxSize")) {
-        ROS_INFO("I HAS BOXSIZE!!!");
-        nh->getParam("boxSize", boxSize);
-    }
-    if(nh->hasParam("heightOffset")) {nh->getParam("heightOffset", heightOffset);}
-    if(nh->hasParam("depthOffset")) {nh->getParam("depthOffset", depthOffset);}
+    if(nh->hasParam("hand_tracker/boxSize")) {nh->getParam("hand_tracker/boxSize", boxSize);}
+    if(nh->hasParam("hand_tracker/heightOffset")) {nh->getParam("hand_tracker/heightOffset", heightOffset);}
+    if(nh->hasParam("hand_tracker/depthOffset")) {nh->getParam("hand_tracker/depthOffset", depthOffset);}
 
     ROS_INFO_ONCE("boxSize: %f  heightOffset: %f  depthOffset: %f", boxSize, heightOffset, depthOffset);
 
