@@ -23,11 +23,11 @@ class hand_controller{
 		angel=0;
 		speedparameter = 1;
 		angularparameter= 5;
-		if(n.hasParam("speedParamter")){
-			n.getParam("speedParameter",speedparameter);
+        if(n.hasParam("SpeedParamter")){
+            n.getParam("SpeedParameter",speedparameter);
 		}
 		if(n.hasParam("angularParamter")){
-			n.getParam("angularParameter",angularparameter);
+            n.getParam("angularParameter",angularparameter);
 		}
 		if(n.hasParam("Xtarget")){
 			n.getParam("Xtarget",aimed[0]);
@@ -35,6 +35,7 @@ class hand_controller{
 		if(n.hasParam("Ytarget")){
 			n.getParam("Ytarget",aimed[1]);
 		}
+        ROS_INFO_ONCE("Parameters are speed: %f angular:  %f Xtarget: %f  Ytarget %f", speedparameter, angularparameter, aimed[0], aimed[1]);
 	}
     void call(){
 		error[0]= current[0] - aimed[0];
@@ -48,7 +49,7 @@ class hand_controller{
     	msg.angular.y=0;
     	msg.angular.z=angel;
     	Twist_publisher.publish(msg);
-	ROS_INFO("Speed [%f] Angular [%f]", speed, angel);
+    //ROS_INFO("Speed [%f] Angular [%f]", speed, angel);
 	}
 	void directioncallbacker(geometry_msgs::Point msgP){
 		current[0]=msgP.x;
@@ -56,7 +57,7 @@ class hand_controller{
 		if(std::abs(current[0])<0.000001 && std::abs(current[1])<0.000001){
 				current[0]=aimed[0];
 				current[1]=aimed[1];
-				ROS_INFO("ARE WE IN HERE");
+                //ROS_INFO("ARE WE IN HERE");
 		}
 		
 	}

@@ -11,19 +11,15 @@
 #include <pcl/filters/crop_box.h>
 #include <pcl/common/centroid.h>
 
-#define BOXSIZE 0.5
-#define DEPTH_OFFSET 0.3
-#define HEIGHT_OFFSET 0.3
-
 typedef pcl::PCLPointCloud2 Cloud2;
 typedef pcl::PointXYZRGB Point;
 typedef pcl::PointCloud<Point> Cloud;
 
-static ros::Publisher pcl_pub;
-static ros::Publisher dir_pub;
-static ros::Publisher vis_pub;
+static ros::Publisher pcl_pub, dir_pub, vis_pub;
+static Eigen::Vector4f minVal, maxVal;
+static ros::NodeHandle* nh;
 
-void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
+static void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
     static bool tracking = false;
 
     Cloud::Ptr input(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -31,10 +27,6 @@ void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
     Cloud2 tmp_pcl;
     pcl_conversions::toPCL(*pcl_msg, tmp_pcl);
     pcl::fromPCLPointCloud2(tmp_pcl, *input);
-
-    //Order of params: width, height, depth
-    Eigen::Vector4f minVal(-BOXSIZE, -BOXSIZE + HEIGHT_OFFSET, DEPTH_OFFSET, 1);
-    Eigen::Vector4f maxVal(BOXSIZE, BOXSIZE + HEIGHT_OFFSET, 2*BOXSIZE + DEPTH_OFFSET, 1);
 
     pcl::CropBox<Point> cb;
     cb.setMin(minVal);
@@ -79,53 +71,37 @@ void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
     vis_msg_out.scale.x =  0.04;
     vis_msg_out.scale.y =  0.08;
     vis_pub.publish(vis_msg_out);
+}
 
-    //    visualization_msgs::Marker vis_msg_out2;
-    //    vis_msg_out2.header.frame_id = "/camera_depth_frame";
-    //    vis_msg_out2.header.stamp = ros::Time();
-    //    vis_msg_out2.ns = "box_marker";
-    //    vis_msg_out2.id = 0;
-    //    vis_msg_out2.action = visualization_msgs::Marker::ADD;
-    //    vis_msg_out2.type = visualization_msgs::Marker::LINE_STRIP;
-    //    geometry_msgs::Point p;
-    //    p.x = minVal[2]; p.y = -minVal[1]; p.z = -minVal[0];
-    //    vis_msg_out2.points.push_back(p);
-    //    p.x = minVal[2]; p.y = -minVal[1]; p.z = -maxVal[0];
-    //    vis_msg_out2.points.push_back(p);
-    //    vis_msg_out2.points.push_back(p);
-    //    p.x = minVal[2]; p.y = -maxVal[1]; p.z = -maxVal[0];
-    //    vis_msg_out2.points.push_back(p);
-    //    vis_msg_out2.points.push_back(p);
-    //    p.x = minVal[2]; p.y = -maxVal[1]; p.z = -minVal[0];
-    //    vis_msg_out2.points.push_back(p);
-    //    vis_msg_out2.points.push_back(p);
-    //    p.x = maxVal[2]; p.y = -maxVal[1]; p.z = -minVal[0];
-    //    vis_msg_out2.points.push_back(p);
-    //    vis_msg_out2.points.push_back(p);
-    //    p.x = maxVal[2]; p.y = -maxVal[1]; p.z = -maxVal[0];
-    //    vis_msg_out2.points.push_back(p);
-    //    vis_msg_out2.points.push_back(p);
-    //    p.x = maxVal[2]; p.y = -minVal[1]; p.z = -maxVal[0];
-    //    vis_msg_out2.points.push_back(p);
-    //    vis_msg_out2.points.push_back(p);
-    //    p.x = maxVal[2]; p.y = -minVal[1]; p.z = -minVal[0];
-    //    vis_msg_out2.points.push_back(p);
+static void init() {
+    //Order of params: width, height, depth
+    nh = (new ros::NodeHandle);
+    double boxSize = 0.3, heightOffset = 0.3, depthOffset = 0.1;
+    if(nh->hasParam("boxSize")) {
+        ROS_INFO("I HAS BOXSIZE!!!");
+        nh->getParam("boxSize", boxSize);
+    }
+    if(nh->hasParam("heightOffset")) {nh->getParam("heightOffset", heightOffset);}
+    if(nh->hasParam("depthOffset")) {nh->getParam("depthOffset", depthOffset);}
 
+    ROS_INFO_ONCE("boxSize: %f  heightOffset: %f  depthOffset: %f", boxSize, heightOffset, depthOffset);
 
-    //    vis_msg_out2.lifetime = ros::Duration(3, 0);
-    //    vis_msg_out2.color = c;
-    //    vis_msg_out2.scale.x =  0.04;
-    //    vis_pub.publish(vis_msg_out2);
+    minVal[0] = -boxSize;
+    minVal[1] = -boxSize - heightOffset;
+    minVal[2] = depthOffset;
+    maxVal[0] = boxSize;
+    maxVal[1] = boxSize - heightOffset;
+    maxVal[2] = 2*boxSize + depthOffset;
 }
 
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "hand_tracker");
-    ros::NodeHandle nh;
-    ros::Subscriber pcl_sub = nh.subscribe("/camera/depth_registered/points", 1, imageCb);
-    pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/hand_tracker/pcl_filtered", 1);
-    dir_pub = nh.advertise<geometry_msgs::Point>("/hand_tracker/direction", 1);
-    vis_pub = nh.advertise<visualization_msgs::Marker>("/hand_tracker/vis_marker", 0);
+    init();
+    ros::Subscriber pcl_sub = nh->subscribe("/camera/depth_registered/points", 1, imageCb);
+    pcl_pub = nh->advertise<sensor_msgs::PointCloud2>("/hand_tracker/pcl_filtered", 1);
+    dir_pub = nh->advertise<geometry_msgs::Point>("/hand_tracker/direction", 1);
+    vis_pub = nh->advertise<visualization_msgs::Marker>("/hand_tracker/vis_marker", 0);
     ros::spin();
     return 0;
 }
