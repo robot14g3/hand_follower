@@ -15,7 +15,7 @@ class hand_controller{
 	// Z ist the Distance to the object, x is distance to the middle. 
 	void init(double x, double z){        
 		Hand_subscriber = n.subscribe("/hand_tracker/direction", 1, &hand_controller::directioncallbacker,this);
-		Twist_publisher= n.advertise<geometry_msgs::Twist>("/motor_control/Twist", 100);
+		Twist_publisher= n.advertise<geometry_msgs::Twist>("/motor_controller/twist", 100);
 		error[0]=0;
 		error[1]=0;
 		aimed[0]=x;
