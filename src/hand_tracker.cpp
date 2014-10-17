@@ -9,8 +9,11 @@
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
 #include <pcl/filters/crop_box.h>
+#include <pcl/common/centroid.h>
 
-#define BOXSIZE 0.3
+#define BOXSIZE 0.5
+#define DEPTH_OFFSET 0.3
+#define HEIGHT_OFFSET 0.3
 
 typedef pcl::PCLPointCloud2 Cloud2;
 typedef pcl::PointXYZRGB Point;
@@ -21,7 +24,6 @@ static ros::Publisher dir_pub;
 static ros::Publisher vis_pub;
 
 void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
-    static Eigen::Vector4f offset(0, 0, 0, 0);
     static bool tracking = false;
 
     Cloud::Ptr input(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -31,45 +33,32 @@ void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
     pcl::fromPCLPointCloud2(tmp_pcl, *input);
 
     //Order of params: width, height, depth
-    Eigen::Vector4f minVal(-BOXSIZE, -BOXSIZE, 0, 1);
-    Eigen::Vector4f maxVal(BOXSIZE, BOXSIZE, 2*BOXSIZE, 1);
-    minVal += offset;
-    maxVal += offset;
+    Eigen::Vector4f minVal(-BOXSIZE, -BOXSIZE + HEIGHT_OFFSET, DEPTH_OFFSET, 1);
+    Eigen::Vector4f maxVal(BOXSIZE, BOXSIZE + HEIGHT_OFFSET, 2*BOXSIZE + DEPTH_OFFSET, 1);
+
     pcl::CropBox<Point> cb;
     cb.setMin(minVal);
     cb.setMax(maxVal);
     cb.setInputCloud(input);
     cb.filter(*output);
 
-    tracking = output->size() > 15000;
+    //Do we have enough points to track
+    tracking = output->size() > 5000;
 
-    Point closestPoint;
-    double closestSqureDist = std::numeric_limits<double>::max();
+    Eigen::Vector4f massCenter;
     if(tracking) {
-        for(Cloud::const_iterator it = output->begin(); it != output->end(); it++) {
-            double dist = it->x*it->x + it->y*it->y + it->z*it->z;
-            if(dist < closestSqureDist) {
-                closestPoint = *it;
-                closestSqureDist = dist;
-            }
-        }
+        pcl::ConstCloudIterator<Point> cloudIterator(*output);
+        pcl::compute3DCentroid(cloudIterator, massCenter);
     }
-
-    offset[0] = tracking ? closestPoint.x : 0;
-    offset[1] = tracking ? closestPoint.y : 0;
-    offset[2] = tracking ? closestPoint.z : 0;
-
-    ROS_INFO("input size:%d output size:%d", input->size(), output->size());
-    ROS_INFO("tracking:%d closest point:(%.5f %.5f %.5f)", tracking, closestPoint.x, closestPoint.y, closestPoint.z);
 
     sensor_msgs::PointCloud2 pcl_msg_out;
     pcl::toROSMsg(*output, pcl_msg_out);
     pcl_pub.publish(pcl_msg_out);
 
     geometry_msgs::Point dir_msg_out;
-    dir_msg_out.x = closestPoint.z;
-    dir_msg_out.y = -closestPoint.y;
-    dir_msg_out.z = -closestPoint.x;
+    dir_msg_out.x = massCenter[2];
+    dir_msg_out.y = -massCenter[0];
+    dir_msg_out.z = -massCenter[1];
     dir_pub.publish(dir_msg_out);
 
     visualization_msgs::Marker vis_msg_out;
@@ -88,42 +77,42 @@ void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
     vis_msg_out.scale.y =  0.08;
     vis_pub.publish(vis_msg_out);
 
-    visualization_msgs::Marker vis_msg_out2;
-    vis_msg_out2.header.frame_id = "/camera_depth_frame";
-    vis_msg_out2.header.stamp = ros::Time();
-    vis_msg_out2.ns = "box_marker";
-    vis_msg_out2.id = 0;
-    vis_msg_out2.action = visualization_msgs::Marker::ADD;
-    vis_msg_out2.type = visualization_msgs::Marker::LINE_STRIP;
-    geometry_msgs::Point p;
-    p.x = minVal[2]; p.y = -minVal[1]; p.z = -minVal[0];
-    vis_msg_out2.points.push_back(p);
-    p.x = minVal[2]; p.y = -minVal[1]; p.z = -maxVal[0];
-    vis_msg_out2.points.push_back(p);
-    vis_msg_out2.points.push_back(p);
-    p.x = minVal[2]; p.y = -maxVal[1]; p.z = -maxVal[0];
-    vis_msg_out2.points.push_back(p);
-    vis_msg_out2.points.push_back(p);
-    p.x = minVal[2]; p.y = -maxVal[1]; p.z = -minVal[0];
-    vis_msg_out2.points.push_back(p);
-    vis_msg_out2.points.push_back(p);
-    p.x = maxVal[2]; p.y = -maxVal[1]; p.z = -minVal[0];
-    vis_msg_out2.points.push_back(p);
-    vis_msg_out2.points.push_back(p);
-    p.x = maxVal[2]; p.y = -maxVal[1]; p.z = -maxVal[0];
-    vis_msg_out2.points.push_back(p);
-    vis_msg_out2.points.push_back(p);
-    p.x = maxVal[2]; p.y = -minVal[1]; p.z = -maxVal[0];
-    vis_msg_out2.points.push_back(p);
-    vis_msg_out2.points.push_back(p);
-    p.x = maxVal[2]; p.y = -minVal[1]; p.z = -minVal[0];
-    vis_msg_out2.points.push_back(p);
+    //    visualization_msgs::Marker vis_msg_out2;
+    //    vis_msg_out2.header.frame_id = "/camera_depth_frame";
+    //    vis_msg_out2.header.stamp = ros::Time();
+    //    vis_msg_out2.ns = "box_marker";
+    //    vis_msg_out2.id = 0;
+    //    vis_msg_out2.action = visualization_msgs::Marker::ADD;
+    //    vis_msg_out2.type = visualization_msgs::Marker::LINE_STRIP;
+    //    geometry_msgs::Point p;
+    //    p.x = minVal[2]; p.y = -minVal[1]; p.z = -minVal[0];
+    //    vis_msg_out2.points.push_back(p);
+    //    p.x = minVal[2]; p.y = -minVal[1]; p.z = -maxVal[0];
+    //    vis_msg_out2.points.push_back(p);
+    //    vis_msg_out2.points.push_back(p);
+    //    p.x = minVal[2]; p.y = -maxVal[1]; p.z = -maxVal[0];
+    //    vis_msg_out2.points.push_back(p);
+    //    vis_msg_out2.points.push_back(p);
+    //    p.x = minVal[2]; p.y = -maxVal[1]; p.z = -minVal[0];
+    //    vis_msg_out2.points.push_back(p);
+    //    vis_msg_out2.points.push_back(p);
+    //    p.x = maxVal[2]; p.y = -maxVal[1]; p.z = -minVal[0];
+    //    vis_msg_out2.points.push_back(p);
+    //    vis_msg_out2.points.push_back(p);
+    //    p.x = maxVal[2]; p.y = -maxVal[1]; p.z = -maxVal[0];
+    //    vis_msg_out2.points.push_back(p);
+    //    vis_msg_out2.points.push_back(p);
+    //    p.x = maxVal[2]; p.y = -minVal[1]; p.z = -maxVal[0];
+    //    vis_msg_out2.points.push_back(p);
+    //    vis_msg_out2.points.push_back(p);
+    //    p.x = maxVal[2]; p.y = -minVal[1]; p.z = -minVal[0];
+    //    vis_msg_out2.points.push_back(p);
 
 
-    vis_msg_out2.lifetime = ros::Duration(3, 0);
-    vis_msg_out2.color = c;
-    vis_msg_out2.scale.x =  0.04;
-    vis_pub.publish(vis_msg_out2);
+    //    vis_msg_out2.lifetime = ros::Duration(3, 0);
+    //    vis_msg_out2.color = c;
+    //    vis_msg_out2.scale.x =  0.04;
+    //    vis_pub.publish(vis_msg_out2);
 }
 
 int main(int argc, char** argv)
