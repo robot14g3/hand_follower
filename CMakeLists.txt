@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     std_msgs
     pcl_ros
+    geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -163,5 +164,7 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+add_executable(hand_controller src/hand_controller.cpp)
+target_link_libraries(hand_controller ${catkin_LIBRARIES})
 add_executable(hand_tracker src/hand_tracker.cpp)
 target_link_libraries(hand_tracker ${catkin_LIBRARIES})
