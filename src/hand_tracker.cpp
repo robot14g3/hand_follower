@@ -46,6 +46,9 @@ void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
     tracking = output->size() > 5000;
 
     Eigen::Vector4f massCenter;
+    massCenter[0] = 0;
+    massCenter[1] = 0;
+    massCenter[2] = 0;
     if(tracking) {
         pcl::ConstCloudIterator<Point> cloudIterator(*output);
         pcl::compute3DCentroid(cloudIterator, massCenter);
