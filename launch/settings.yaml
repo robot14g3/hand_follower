@@ -1,5 +1,7 @@
 hand_tracker:
-    boxSize: 0.4
+    width: 0.2
+    height: 0.4
+    depth: 0.6
     heightOffset: 0.3
     depthOffset: 0.3
 

@@ -76,8 +76,10 @@ static void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
 static void init() {
     //Order of params: width, height, depth
     nh = (new ros::NodeHandle);
-    double boxSize = 0.3, heightOffset = 0.3, depthOffset = 0.1;
-    if(nh->hasParam("hand_tracker/boxSize")) {nh->getParam("hand_tracker/boxSize", boxSize);}
+    double depth = 0.3, height = 0.3, widht = 0.3, heightOffset = 0.3, depthOffset = 0.1;
+    if(nh->hasParam("hand_tracker/depth")) {nh->getParam("hand_tracker/depth", boxSize);}
+    if(nh->hasParam("hand_tracker/height")) {nh->getParam("hand_tracker/height", boxSize);}
+    if(nh->hasParam("hand_tracker/width")) {nh->getParam("hand_tracker/width", boxSize);}
     if(nh->hasParam("hand_tracker/heightOffset")) {nh->getParam("hand_tracker/heightOffset", heightOffset);}
     if(nh->hasParam("hand_tracker/depthOffset")) {nh->getParam("hand_tracker/depthOffset", depthOffset);}
 
