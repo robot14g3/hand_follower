@@ -1,12 +1,12 @@
 hand_tracker:
-    width: 0.2
-    height: 0.4
-    depth: 0.6
+    width: 0.4
+    height: 0.6
+    depth: 1;
     heightOffset: 0.3
-    depthOffset: 0.3
+    depthOffset: 0.5
 
 hand_controller:
     SpeedParameter: 3.0
     angularParameter: 3.0
-    Xtarget: 0.6
+    Xtarget: 0.5
     Ytarget: 0.0

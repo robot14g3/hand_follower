@@ -7,6 +7,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/registration/icp.h>
 #include <pcl/filters/crop_box.h>
 #include <pcl/common/centroid.h>
@@ -34,20 +35,28 @@ static void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
     cb.setInputCloud(input);
     cb.filter(*output);
 
+
     //Do we have enough points to track
     tracking = output->size() > 5000;
 
+    std::vector<int> kdIndices;
+    std::vector<float> kdDist;
     Eigen::Vector4f massCenter;
     massCenter[0] = 0;
     massCenter[1] = 0;
     massCenter[2] = 0;
     if(tracking) {
-        pcl::ConstCloudIterator<Point> cloudIterator(*output);
-        pcl::compute3DCentroid(cloudIterator, massCenter);
+        pcl::KdTreeFLANN<Point> kd;
+        kd.setInputCloud(output);
+        Point origin;
+        kd.nearestKSearch(origin, 100, kdIndices, kdDist);
+        pcl::compute3DCentroid(*output, kdIndices, massCenter);
     }
 
+    pcl::PointCloud<Point> kd_filtered(*output, kdIndices);
+
     sensor_msgs::PointCloud2 pcl_msg_out;
-    pcl::toROSMsg(*output, pcl_msg_out);
+    pcl::toROSMsg(kd_filtered, pcl_msg_out);
     pcl_pub.publish(pcl_msg_out);
 
     geometry_msgs::Point dir_msg_out;
