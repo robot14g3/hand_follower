@@ -3,11 +3,12 @@
 #include <geometry_msgs/Point.h>
 
 class hand_controller{
+	public:
 	ros::NodeHandle n;
     ros::Publisher Twist_publisher;
     geometry_msgs::Twist msg;
 	ros::Subscriber Hand_subscriber;
-	
+
 	hand_controller(){
 		n = ros::NodeHandle("~");
 	}
@@ -21,7 +22,6 @@ class hand_controller{
 		aimed[1]=z;
 		current[0]=x;
 		current[0]=z;
-		ID=0;
 		speed=0;
 		angel=0;
     }
@@ -43,15 +43,33 @@ class hand_controller{
 		current[1]=msgP.z;
 		if(current[0]==0 && current[1]==0){
 				current[0]=aimed[0];
-				current[0]=aimed[0]
+				current[0]=aimed[0];
 		}
 		
 	}
-	private
-	static const float speedparameter = 0.05;
-	static const float angularparameter= 0.05;
+	private:
+	static const float speedparameter = 50;
+	static const float angularparameter= 50;
 	double current [2];
 	double error [2]; 
 	double aimed [2];
 	double speed, angel;
+};
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "hand_controller");
+
+    hand_controller hand_controller_node;
+   	hand_controller_node.init(0,0.5);
+    ros::Rate loop_rate(10.0);
+
+    while(hand_controller_node.n.ok())
+    {
+    	
+    	hand_controller_node.call();
+        ros::spinOnce();
+        loop_rate.sleep();
+    }
+
+    return 0;
 }
