@@ -74,23 +74,21 @@ static void imageCb(const sensor_msgs::PointCloud2ConstPtr& pcl_msg) {
 }
 
 static void init() {
-    //Order of params: width, height, depth
     nh = (new ros::NodeHandle);
-    double depth = 0.3, height = 0.3, widht = 0.3, heightOffset = 0.3, depthOffset = 0.1;
-    if(nh->hasParam("hand_tracker/depth")) {nh->getParam("hand_tracker/depth", boxSize);}
-    if(nh->hasParam("hand_tracker/height")) {nh->getParam("hand_tracker/height", boxSize);}
-    if(nh->hasParam("hand_tracker/width")) {nh->getParam("hand_tracker/width", boxSize);}
+    double depth = 0.3, height = 0.3, width = 0.3, heightOffset = 0.3, depthOffset = 0.1;
+    if(nh->hasParam("hand_tracker/depth")) {nh->getParam("hand_tracker/depth", depth);}
+    if(nh->hasParam("hand_tracker/height")) {nh->getParam("hand_tracker/height", height);}
+    if(nh->hasParam("hand_tracker/width")) {nh->getParam("hand_tracker/width", width);}
     if(nh->hasParam("hand_tracker/heightOffset")) {nh->getParam("hand_tracker/heightOffset", heightOffset);}
     if(nh->hasParam("hand_tracker/depthOffset")) {nh->getParam("hand_tracker/depthOffset", depthOffset);}
 
-    ROS_INFO_ONCE("boxSize: %f  heightOffset: %f  depthOffset: %f", boxSize, heightOffset, depthOffset);
-
-    minVal[0] = -boxSize;
-    minVal[1] = -boxSize - heightOffset;
-    minVal[2] = depthOffset;
-    maxVal[0] = boxSize;
-    maxVal[1] = boxSize - heightOffset;
-    maxVal[2] = 2*boxSize + depthOffset;
+    //Order of params: width, height, depth
+    minVal[0] = -width/2;
+    minVal[1] = -height/2 - heightOffset;
+    minVal[2] = -depth/2 + depthOffset;
+    maxVal[0] = width/2;
+    maxVal[1] = height/2 - heightOffset;
+    maxVal[2] = depth/2 + depthOffset;
 }
 
 int main(int argc, char** argv)
