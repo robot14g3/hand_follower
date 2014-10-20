@@ -23,10 +23,10 @@ class hand_controller{
 		angel=0;
 		speedparameter = 1;
 		angularparameter= 5;
-        if(n.hasParam("hand_controller/SpeedParamter")){
+        if(n.hasParam("hand_controller/SpeedParameter")){
             n.getParam("hand_controller/SpeedParameter",speedparameter);
 		}
-        if(n.hasParam("hand_controller/angularParamter")){
+        if(n.hasParam("hand_controller/angularParameter")){
             n.getParam("hand_controller/angularParameter",angularparameter);
 		}
         if(n.hasParam("hand_controller/Xtarget")){
